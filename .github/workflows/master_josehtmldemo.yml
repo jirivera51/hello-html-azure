@@ -1,4 +1,7 @@
-name: Deploy HTML to Azure Web App - josehtmldemo
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy ASP app to Azure Web App - josehtmldemo
 
 on:
   push:
@@ -7,26 +10,57 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    permissions:   # 👈 required for OIDC login
-      id-token: write
-      contents: read
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+
+      - name: Restore NuGet packages
+        run: nuget restore
+
+      - name: Publish to folder
+        run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASP-app
+          path: '/published/**'
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: ASP-app
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7C33586803C443538C9812004C2E7E04 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_808A9CE5191E4EE1BB93E4944A01DB7E }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_29035A053CA64AFFAD4ECC5F6E3C1EC4 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_462EE3223AF9477A932D4620C4575590 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4038EB2C269445D5ABB647A6983CEB6D }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_FFD1BC6880CE47BC95E5C3A494B628BA }}
 
       - name: Deploy to Azure Web App
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'josehtmldemo'
           slot-name: 'Production'
           package: .
+          
