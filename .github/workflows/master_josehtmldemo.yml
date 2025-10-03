@@ -20,13 +20,12 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Login to Azure using OIDC (federated credentials)
-      - name: Azure Login
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_14A3DC86A55B4312B7EACD3B699FB76C }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1C201023C9194131A656C75CA44E5A3E }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6C13AD2EF6734AB5ABE5FBB3EF01BF0B }}
       # 3. Deploy HTML files to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
